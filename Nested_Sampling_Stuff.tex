@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amsthm, amssymb, fancyhdr, fancybox, graphicx}
+\usepackage{psfrag, dcolumn, bm, accents, setspace, textcomp}
+\usepackage{url, hyperref, color, wasysym}
+
+\pagestyle{empty}
+
+\oddsidemargin  0.05in
+%\evensidemargin  7pt
+\marginparsep 0pt
+\topmargin=-0.5in
+\textwidth=6.42in
+\textheight=9in
+\parskip = 3pt plus 1pt minus 1pt
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{identity}{Identity}
+\newtheorem{defn}{Definition}
+\newtheorem{algorithm}{Algorithm}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\dist}{\operatornamewithlimits{\sim}}
+\newcommand{\converges}{\operatornamewithlimits{\longrightarrow}}
+\newcommand{\cprob}{\stackrel{p}{\longrightarrow}}
+\newcommand{\cdist}{\stackrel{d}{\longrightarrow}}
+\newcommand{\cprobanddist}{\stackrel{p,d}{\longrightarrow}}
+\newcommand{\cas}{\stackrel{a.s.}{\longrightarrow}}
+\newcommand{\crth}{\stackrel{r}{\longrightarrow}}
+\newcommand{\cone}{\stackrel{1}{\longrightarrow}}
+\newcommand{\cms}{\stackrel{m.s.}{\longrightarrow}}
+\newcommand{\iid}{\stackrel{iid}{\sim}}
+\newcommand{\wtssim}{\stackrel{wts}{\sim}}
+\newcommand{\simind}{\stackrel{ind}{\sim}}
+\newcommand{\eqas}{\stackrel{a.s.}{=}}
+\newcommand{\eqdist}{\stackrel{d}{=}}
+\def\Var{\textrm{Var}\,}
+\def\E{\mathbb{E}\,}
+\def\Wish{\textrm{Wishart}\,}
+\def\IWish{\textrm{Inv-Wishart}\,}
+\def\Pois{\textrm{Poisson}\,}
+\def\Nb{\textrm{Neg-Bin}\,}
+\def\Gm{\textrm{Gamma}\,}
+\def\Expo{\textrm{Expo}\,}
+\def\Beta{\textrm{Beta}\,}
+\def\Pareto{\textrm{Pareto}\,}
+\def\Unif{\textrm{Uniform}\,}
+\def\Ber{\textrm{Bernoulli}\,}
+\def\Bin{\textrm{Binomial}\,}
+\def\s{\mathbf{s}}
+\def\Y{\mathbf{Y}}
+\def\F{\mathbf{F}}
+\def\Ft{\mathbf{F}^{T}}
+\def\G{\mathbf{G}}
+\def\V{\mathbf{V}}
+\def\W{\mathbf{W}}
+\def\xt{\mathbf{x}^{T}}
+\def\kron{\otimes\,}
+\def\R{R} % May change this
+\def\G{G} % May change this
+\def\I{\mathbb{I}}
+\def\J{\mathbb{J}}
+\def\1{\mathbf{1}}
+\def\0{\mathbf{0}}
+\def\R{\texttt{R}}
+\def\lme{\texttt{lme4}}
+\def\lmer{\texttt{lmer}}
+\def\Xi{X_{i}}
+\def\Zi{Z_{i}}
+\def\diag{\textrm{diag}}
+\def\bdiag{\textrm{block-diag}}
+\def\dim{\textrm{dim}}
+\def\tr{\textrm{tr}}
+\def\nstat{n_{\textrm{stations}}}
+\def\nrcm{n_{\textrm{RCM}}}
+\def\ngcm{n_{\textrm{GCM}}}
+\def\ngrid{n_{\textrm{grid}}}
+
+\def\lNS{$\log(N)-\log(S)$}
+\def\apl{\alpha_{PL}}
+\def\bpl{\beta_{PL}}
+\def\Sstar{S_{*}}
+\def\Smin{S_{min}}
+\def\Yobs{Y_{obs}}
+\def\Ymis{Y_{mis}}
+\def\Nobs{N_{obs}}
+\def\Nmis{N_{mis}}
+\def\Ncom{N_{com}}
+\def\Iobs{I_{obs}}
+\def\Imis{I_{mis}}
+\def\Icom{I_{com}}
+\def\Sobs{S_{obs}}
+\def\Smis{S_{mis}}
+\def\Scom{S_{com}}
+\def\Eobs{E_{obs}}
+\def\Emis{E_{mis}}
+\def\Ecom{E_{com}}
+\def\Lobs{L_{obs}}
+\def\Lmis{L_{mis}}
+\def\Lcom{L_{com}}
+
+\def\CUDA{\texttt{CUDA}\,}
+\def\Python{\texttt{Python}\,}
+\def\PyCUDA{\texttt{PyCUDA}\,}
+\def\numpy{\texttt{numpy}\,}
+\def\OpenCL{\texttt{OpenCL}\,}
+\def\GPUArray{\texttt{GPUArray}\,}
+
+\begin{document}
+
+\title{Nested Sampling and the Evaluation of the \lq{}Evidence\rq{} for Bayesian Model Selection}
+\author{
+Paul D. Baines, Nicholas Ulle\\
+\emph{University of California, Davis}
+}
+\date{\today}
+\maketitle
+
+\section{Introduction}\label{overview}
+
+\begin{itemize}
+ \item Explanation of Nested Sampling
+ \item Intuitive explanation of the algorithm
+ \item Basics of computing the evidence and Bayesian model selection
+\end{itemize}
+
+
+\section{Example}
+Here we take a look at the classic mixture of normals:
+\begin{align*}
+ Y_{i} = \sum_{j=1}^{K}I_{ij}Z_{ij} , \qquad i=1,\ldots,n , 
+\end{align*}
+where:
+\begin{align*}
+ I_{i} = (I_{i1},\ldots,I_{iK}) &\sim \textrm{Multinomial}\left(1,p\right) , \\ 
+ Z_{ij} &\iid N\left(\mu_{j},1\right) .
+\end{align*}
+The parameters in the model are the mixture proportions $p=(p_{1},\ldots,p_{K})$ (with $\sum_{j}p_{j}=1$) and the mixture locations $\mu=(\mu_{1},\ldots,\mu_{k})$. The number of mixture components $K$ will be fixed for a given model, and we will use the evidence to motivate a model selection procedure to select the appropriate $K$. For convenience we choose conditionally conjugate priors for $\mu$ and $p$:
+\begin{align*}
+ \mu \sim N\left(\mu_{0},V_{0}\right) , \qquad p \sim \textrm{Multinomial}\left(\alpha\right) ,
+\end{align*}
+where $\mu_{0}, V_{0}$ and $\alpha$ are fixed hyperparameters chosen by the analyst.
+
+\subsection{Posterior Distributions}
+
+TODO
+
+\subsection{Evaluating the Evidence: Analytically}
+
+TODO
+
+\subsection{Evaluating the Evidence: Nested Sampling}
+
+TODO
+
+\subsection{Evaluating the Evidence: Other Methods}
+
+TODO
+
+
+
+\end{document}
