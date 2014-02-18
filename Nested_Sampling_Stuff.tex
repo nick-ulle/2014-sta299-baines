@@ -125,8 +125,30 @@ Paul D. Baines, Nicholas Ulle\\
  \item Basics of computing the evidence and Bayesian model selection
 \end{itemize}
 
+\section*{Example I}
+Let:
+\begin{align*}
+Y_{i} \sim{} N(\mu,\sigma^{2}) , \qquad i=1,\ldots,n ,
+\end{align*}
+with prior $p(\mu)\propto{}N(\mu_{0},\tau_{0}^{2})$ and $\sigma^{2}$ known. Letting $C=(2\pi)^{-(n+1)/2}(\tau_{0}^{2})^{-1/2}(\sigma^{2})^{-n/2}$, the evidence, or marginal likelihood, is:
+\begin{align*}
+ p(y) &= \int p(y_{1},\ldots,y_{n}|\mu)p(\mu)d\mu = \int p(\mu)\prod_{i=1}^{n}p(y_{i}|\mu) d\mu \\
+ &= \int C \times \exp\left\{-\frac{1}{2\sigma^{2}}\sum_{i=1}^{n}(y_{i}-\mu)^{2} -\frac{1}{2\tau_{0}^{2}}(\mu-\mu_{0})^{2} \right\} d\mu \\
+ &= C \times \int \exp\left\{-\frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)\mu^{2} + \frac{1}{2}\mu\left(\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right) - \frac{1}{2}\left(\frac{\mu_{0}^{2}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}^{2}}{\sigma^{2}}\right) \right\} d\mu \\
+  &= C \times \exp\left\{ - \frac{1}{2}\left(\frac{\mu_{0}^{2}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}^{2}}{\sigma^{2}}\right)
+  + \frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1}\left[\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right]^{2}\right\} \\
+  & \times  \int \exp\left\{ -\frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)\left(\mu - \left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1}\left[\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right]\right)^{2} \right\}  d\mu \\
+ &=  C\times\exp\left\{ - \frac{1}{2}\left(\frac{\mu_{0}^{2}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}^{2}}{\sigma^{2}}\right)
+  + \frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1}\left[\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right]^{2}\right\} \times{} (2\pi)^{1/2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1/2} \\
+   &= C\times(2\pi)^{1/2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1/2}\exp\left\{ - \frac{1}{2}\left(\frac{\mu_{0}^{2}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}^{2}}{\sigma^{2}}\right)
+  + \frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1}\left[\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right]^{2}\right\} .
+\end{align*}
+This will allow us to verify the results obtained using nested sampling. In the simple case where $\mu_{0}=0$, $\tau_{0}^{2}=1$, $n=1$, $\sigma^{2}=1$ we obtain:
+\begin{align*}
+Z = (2\pi)^{-1/2}\left(2\right)^{-1/2}\exp\left\{ - \frac{1}{2}y^{2} + \frac{1}{2}\left(2\right)^{-1}y^{2}\right\}  = \frac{1}{2\sqrt{\pi}}\exp\left\{-\frac{y^{2}}{4}\right\} .
+\end{align*}
 
-\section{Example}
+\section{Example II}
 Here we take a look at the classic mixture of normals:
 \begin{align*}
  Y_{i} = \sum_{j=1}^{K}I_{ij}Z_{ij} , \qquad i=1,\ldots,n , 
@@ -138,9 +160,9 @@ where:
 \end{align*}
 The parameters in the model are the mixture proportions $p=(p_{1},\ldots,p_{K})$ (with $\sum_{j}p_{j}=1$) and the mixture locations $\mu=(\mu_{1},\ldots,\mu_{k})$. The number of mixture components $K$ will be fixed for a given model, and we will use the evidence to motivate a model selection procedure to select the appropriate $K$. For convenience we choose conditionally conjugate priors for $\mu$ and $p$:
 \begin{align*}
- \mu \sim N\left(\mu_{0},V_{0}\right) , \qquad p \sim \textrm{Multinomial}\left(\alpha\right) ,
+ \mu \sim N\left(\mu_{0},\tau_{0}^{2}\right) , \qquad p \sim \textrm{Multinomial}\left(\alpha\right) ,
 \end{align*}
-where $\mu_{0}, V_{0}$ and $\alpha$ are fixed hyperparameters chosen by the analyst.
+where $\mu_{0}, \tau_{0}^{2}$ and $\alpha$ are fixed hyperparameters chosen by the analyst.
 
 \subsection{Posterior Distributions}
 

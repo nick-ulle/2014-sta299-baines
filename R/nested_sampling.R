@@ -28,7 +28,7 @@
   }
   theta.set <- prior.samp(N,prior.args,verbose)
   if (store.samples){
-  	posterior.samples <- array(NA,dim=dim(theta.set))
+  	posterior.samples <- vector("list",N)
   }
 
   # Compute log-likelihood for sampled points:
@@ -100,7 +100,7 @@
     logZ <- logZnew
     # Store samples:
     if (store.samples){
-    	posterior.samples[i,] <- theta.set[k,]
+    	posterior.samples[[i]] <- theta.set
     }
 
     # Check for sufficient accuracy:
