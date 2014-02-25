@@ -160,13 +160,65 @@ where:
 \end{align*}
 The parameters in the model are the mixture proportions $p=(p_{1},\ldots,p_{K})$ (with $\sum_{j}p_{j}=1$) and the mixture locations $\mu=(\mu_{1},\ldots,\mu_{k})$. The number of mixture components $K$ will be fixed for a given model, and we will use the evidence to motivate a model selection procedure to select the appropriate $K$. For convenience we choose conditionally conjugate priors for $\mu$ and $p$:
 \begin{align*}
- \mu \sim N\left(\mu_{0},\tau_{0}^{2}\right) , \qquad p \sim \textrm{Multinomial}\left(\alpha\right) ,
+ \mu \sim N\left(\mu_{0},\tau_{0}^{2}\right) , 
+ \qquad p \sim \textrm{Dirichlet}\left(\alpha\right) ,
 \end{align*}
 where $\mu_{0}, \tau_{0}^{2}$ and $\alpha$ are fixed hyperparameters chosen by the analyst.
 
 \subsection{Posterior Distributions}
 
-TODO
+The $Y_i$ are conditionally independent, so the likelihood is
+\begin{align*}
+    f(y \vert \mu, p)
+    &=
+    \prod_{i=1}^n f(y_i \vert \mu, p)
+    =
+    \prod_{i=1}^n \left[
+        \sum_{\text{all } I_i} f(y_i \vert \mu, I_i) f(I_i \vert p)
+    \right]
+    \\ &=
+    \prod_{i=1}^n \left[
+        \sum_{j=1}^K (2\pi)^{-1/2} 
+        \exp \left(
+            -\frac{1}{2} (y_i - \mu_j)^2
+        \right)
+        p_j
+    \right].
+\end{align*}
+The posterior is therefore
+\begin{align*}
+    f(\mu, p \vert y)
+    &=
+    \frac{1}{Z}
+    f(y \vert \mu, p) f(\mu) f(p)
+    \\ &=
+    \frac{1}{Z}
+    \left\{
+        \prod_{i=1}^n \left[
+            \sum_{j=1}^K (2\pi)^{-1/2} 
+            \exp \left(
+                -\frac{1}{2} (y_i - \mu_j)^2
+            \right)
+            p_j
+        \right]
+    \right\}
+    \\ &\phantom{=\ \,} \times
+    \left\{
+        (2\pi\tau_0^2)^{-1/2}
+        \exp\left(
+            -\frac{1}{2} (\mu - \mu_0 \bm{1})'(\mu - \mu_0 \bm{1})
+        \right)
+    \right\}
+    \\ &\phantom{=\ \,} \times
+    \left\{
+        \frac{\Gamma\left( \sum_{u=1}^K \alpha_u \right)} 
+            {\prod_{v=1}^K \Gamma(\alpha_v)}
+        \prod_{j=1}^K p_j^{\alpha_j - 1}
+    \right\},
+\end{align*}
+where $\bm{1}$ denotes the $K \times 1$ vector of ones.
+
+\noindent TODO
 
 \subsection{Evaluating the Evidence: Analytically}
 
