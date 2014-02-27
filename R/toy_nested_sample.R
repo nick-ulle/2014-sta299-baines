@@ -143,7 +143,7 @@ test.toy.replace <- toy.replace.samp(N=N,
 N <- 1000
 mu.0 <- 0.0
 V.0 <- 1.0
-toy.data <- 2 # test.toy.data$y
+toy.data <- 5 # test.toy.data$y
 toy.prior.args <- list("mu_0"=mu.0,"V_0"=V.0)
 inc.eps <- 1e-8
 grid.method <- "crude"
@@ -181,11 +181,11 @@ cat(paste0("Gaussian Quadrature estimate of log(Z) = ",toy.gq,"\n"))
 
 xmin <- -3
 xmax <- 5
-for (i in 1:2){#N){
+for (i in 1:N){
   jpeg(sprintf("nested_sample_%05d.jpg",i))
   plot(function(x){dnorm(x,mean=toy.data,sd=1.0)},xmin,xmax,ylab="p(x)",main=paste0("Iteration = ",i))
   plot(function(x){dnorm(x,mean=toy.prior.args$mu_0,sd=toy.prior.args$V_0)},xmin,xmax,col="red",add=T)
-  points(y=rep(0.0,N),x=toy.nested$posterior.samples[[1000]],pch=3)
+  points(y=rep(0.0,N),x=toy.nested$posterior.samples[[i]],pch=3)
   dev.off()
 }
 

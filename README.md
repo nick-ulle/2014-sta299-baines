@@ -6,4 +6,5 @@ Relevant papers:
 + <a href="http://arxiv.org/abs/0809.3437">Feroz, F., Hobson, M.P. and Bridges, M. (2009) Multinest: an efficient and robust Bayesian inference tool for cosmology and particle physics. MNRAS, 398-4, pp. 1601--1614.</a>
 + <a href="http://arxiv.org/abs/0912.2380">Brewer, B.J., Partay, L.B. and Csanyi, G. (2010) Diffusive Nested Sampling. Arxiv: 0912.2380</a>
 + <a href="http://biomet.oxfordjournals.org/content/early/2010/06/01/biomet.asq021.full.pdf">Chopin, N. and Robert, C.P. (2010) Properties of Nested Sampling. Biometrika, 97-3, pp. 741--755</a>
++ <a href="http://pages.stat.wisc.edu/~newton/papers/publications/nr.pdf">Newton, Raftery ... </a>
 
