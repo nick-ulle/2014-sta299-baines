@@ -52,8 +52,9 @@ def nested_sample(log_likelihood, prior_sample, npts, niter):
         # Sample a new likelihood point to replace the old one.
         lpts[id] = rejection_sample(smallest, prior_sample, log_likelihood)
 
-        if i % 100 == 0:
-            print("Iteration {} @ {:.4}".format(i, np.exp(evidence)))
+        if (i + 1) % 100 == 0:
+            print("Finished iteration {} of {} with threshold {:.4f}."
+                  .format(i + 1, niter, smallest))
 
     # Add final correction to evidence.
     for i in range(0, npts):
@@ -77,7 +78,7 @@ def toy_example():
     sigma2 = 1.
     mu_0 = 0.
     tau2_0 = 1.
-    y = 0.01
+    y = 5
 
     def toy_prior_sample(n):
         return np.random.normal(mu_0, tau2_0, n)
@@ -86,7 +87,7 @@ def toy_example():
         return -0.5 * np.log(2 * np.pi) - 0.5 * (y - mu)**2 / sigma2
 
     evidence = nested_sample(toy_log_like, toy_prior_sample, 200, 1500)
-    print("Result: ", np.exp(evidence))
+    print(4 * ' ' + "Nested sampling estimate of log(Z) = {}".format(evidence))
 
 def main():
     toy_example()
