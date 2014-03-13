@@ -2,22 +2,22 @@
 
 import numpy as np
 
-def rejection_sample(cutoff, propose, log_likelihood):
+def rejection_sample(threshold, propose, log_likelihood):
     '''Sample from a (truncated) distribution using rejection sampling.
 
     Args:
-        cutoff          threshold sampled values must exceed
+        threshold       threshold sampled values must exceed
         propose         function which returns a proposal
         log_likelihood  vectorized log-likelihood function
     '''
     for i in range(1, 100001): 
         proposal = propose(1)
-        if log_likelihood(proposal) > cutoff:
+        if log_likelihood(proposal) > threshold:
             break
         elif i == 100000:
             raise Exception("Rejection sampling failed after " +
-                            "{} iterations.\nCutoff {}.".format(i, cutoff))
-
+                            "{} iterations.\n".format(i) +
+                            "Threshold {}.".format(threshold))
     return log_likelihood(proposal)
 
 def nested_sample(log_likelihood, prior_sample, npts, niter):
@@ -41,7 +41,7 @@ def nested_sample(log_likelihood, prior_sample, npts, niter):
         id = np.argmin(lpts)
         smallest = lpts[id]
 
-        # Calculate weight.
+        # Calculate trapezoidal weights.
         wt = np.exp(-i / npts) - np.exp(-(i + 2) / npts)
         wt = np.log(0.5 * wt)
 
@@ -75,16 +75,21 @@ def toy_example():
     '''Run the toy example.
     '''
     # Initialization:
-    sigma2 = 1.
-    mu_0 = 0.
-    tau2_0 = 1.
-    y = 5
+    np.random.seed(1220)
+
+    sigma2 = 1.0
+    mu_0 = 0.0
+    tau2_0 = 1.0
+    y = np.array([5.0])
 
     def toy_prior_sample(n):
         return np.random.normal(mu_0, tau2_0, n)
 
     def toy_log_like(mu):
-        return -0.5 * np.log(2 * np.pi) - 0.5 * (y - mu)**2 / sigma2
+        out = 0
+        for y_ in y:
+            out += -0.5 * (np.log(2 * np.pi * sigma2) + (y_ - mu)**2 / sigma2)
+        return out
 
     evidence = nested_sample(toy_log_like, toy_prior_sample, 200, 1500)
     print(4 * ' ' + "Nested sampling estimate of log(Z) = {}".format(evidence))
