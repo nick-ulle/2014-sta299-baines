@@ -9,5 +9,5 @@ Relevant papers:
 + <a href="http://pages.stat.wisc.edu/~newton/papers/publications/nr.pdf">Newton, Raftery ... </a>
 + <a href="http://radfordneal.wordpress.com/2008/08/17/the-harmonic-mean-of-the-likelihood-worst-monte-carlo-method-ever/?relatedposts_exclude=549">Radford Neal blog post</a>
 + <a href="http://xianblog.wordpress.com/2009/11/13/quadrature-methods-for-evidence-approximation/">Christian Robert blog post</a>
-
++ <a href="http://arxiv.org/abs/0911.1777">Weinberg paper</a>
 
