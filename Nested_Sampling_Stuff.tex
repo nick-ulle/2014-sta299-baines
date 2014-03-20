@@ -2,6 +2,7 @@
 \usepackage{amsmath, amsthm, amssymb, fancyhdr, fancybox, graphicx}
 \usepackage{psfrag, dcolumn, bm, accents, setspace, textcomp}
 \usepackage{url, hyperref, color, wasysym}
+\usepackage{dsfont}
 
 \pagestyle{empty}
 
@@ -125,12 +126,14 @@ Paul D. Baines, Nicholas Ulle\\
  \item Basics of computing the evidence and Bayesian model selection
 \end{itemize}
 
-\section*{Example I}
+\section{Toy Example}
 Let:
 \begin{align*}
 Y_{i} \sim{} N(\mu,\sigma^{2}) , \qquad i=1,\ldots,n ,
 \end{align*}
-with prior $p(\mu)\propto{}N(\mu_{0},\tau_{0}^{2})$ and $\sigma^{2}$ known. Letting $C=(2\pi)^{-(n+1)/2}(\tau_{0}^{2})^{-1/2}(\sigma^{2})^{-n/2}$, the evidence, or marginal likelihood, is:
+with prior $p(\mu)\propto{}N(\mu_{0},\tau_{0}^{2})$ and $\sigma^{2}$ known. 
+
+Letting $C=(2\pi)^{-(n+1)/2}(\tau_{0}^{2})^{-1/2}(\sigma^{2})^{-n/2}$, the evidence, or marginal likelihood, is:
 \begin{align*}
  p(y) &= \int p(y_{1},\ldots,y_{n}|\mu)p(\mu)d\mu = \int p(\mu)\prod_{i=1}^{n}p(y_{i}|\mu) d\mu \\
  &= \int C \times \exp\left\{-\frac{1}{2\sigma^{2}}\sum_{i=1}^{n}(y_{i}-\mu)^{2} -\frac{1}{2\tau_{0}^{2}}(\mu-\mu_{0})^{2} \right\} d\mu \\
@@ -148,7 +151,7 @@ This will allow us to verify the results obtained using nested sampling. In the 
 Z = (2\pi)^{-1/2}\left(2\right)^{-1/2}\exp\left\{ - \frac{1}{2}y^{2} + \frac{1}{2}\left(2\right)^{-1}y^{2}\right\}  = \frac{1}{2\sqrt{\pi}}\exp\left\{-\frac{y^{2}}{4}\right\} .
 \end{align*}
 
-\section{Example II}
+\section{Mixture Example}
 Here we take a look at the classic mixture of normals:
 \begin{align*}
  Y_{i} = \sum_{j=1}^{K}I_{ij}Z_{ij} , \qquad i=1,\ldots,n , 
@@ -160,78 +163,183 @@ where:
 \end{align*}
 The parameters in the model are the mixture proportions $p=(p_{1},\ldots,p_{K})$ (with $\sum_{j}p_{j}=1$) and the mixture locations $\mu=(\mu_{1},\ldots,\mu_{k})$. The number of mixture components $K$ will be fixed for a given model, and we will use the evidence to motivate a model selection procedure to select the appropriate $K$. For convenience we choose conditionally conjugate priors for $\mu$ and $p$:
 \begin{align*}
- \mu \sim N\left(\mu_{0},\tau_{0}^{2}\right) , 
- \qquad p \sim \textrm{Dirichlet}\left(\alpha\right) ,
-\end{align*}
-where $\mu_{0}, \tau_{0}^{2}$ and $\alpha$ are fixed hyperparameters chosen by the analyst.
+    \mu \sim N (\mu_{0},\tau_{0}^{2}), 
+    \qquad 
+    p \sim \textrm{Dirichlet}(\alpha),
+    \end{align*}
+where $\mu_{0}, \tau_{0}^{2}$ and $\alpha$ are fixed hyperparameters chosen
+by the analyst.
 
-\subsection{Posterior Distributions}
-
-The $Y_i$ are conditionally independent, so the likelihood is
+\subsection{Posterior Distributions} \label{sec:posteriors}
+In a slight abuse of notation, let $\{I_i = j\}$ be the event that $I_i$ has
+a one in the $j$\textsuperscript{th} position.
+The random variables $(Y_i \vert \mu, p)$ are independent,
+and each has density
 \begin{align*}
-    f(y \vert \mu, p)
+    f_{Y_i}(y_i \vert \mu, p)
     &=
-    \prod_{i=1}^n f(y_i \vert \mu, p)
-    =
-    \prod_{i=1}^n \left[
-        \sum_{\text{all } I_i} f(y_i \vert \mu, I_i) f(I_i \vert p)
-    \right]
+    \sum_{j=1}^K f(y_i \vert \mu, p, I_i = j) \Pr(I_i = j \vert p)
     \\ &=
-    \prod_{i=1}^n \left[
-        \sum_{j=1}^K (2\pi)^{-1/2} 
-        \exp \left(
+    (2\pi)^{-1/2} \sum_{j=1}^K 
+        \exp \biggl[
             -\frac{1}{2} (y_i - \mu_j)^2
-        \right)
-        p_j
-    \right].
+        \biggr]
+        p_j.
 \end{align*}
-The posterior is therefore
+Consequently, the posterior density is
 \begin{align*}
-    f(\mu, p \vert y)
-    &=
-    \frac{1}{Z}
-    f(y \vert \mu, p) f(\mu) f(p)
-    \\ &=
-    \frac{1}{Z}
-    \left\{
-        \prod_{i=1}^n \left[
-            \sum_{j=1}^K (2\pi)^{-1/2} 
-            \exp \left(
-                -\frac{1}{2} (y_i - \mu_j)^2
-            \right)
-            p_j
-        \right]
-    \right\}
-    \\ &\phantom{=\ \,} \times
-    \left\{
-        (2\pi\tau_0^2)^{-1/2}
-        \exp\left(
-            -\frac{1}{2} (\mu - \mu_0 \bm{1})'(\mu - \mu_0 \bm{1})
-        \right)
-    \right\}
-    \\ &\phantom{=\ \,} \times
-    \left\{
-        \frac{\Gamma\left( \sum_{u=1}^K \alpha_u \right)} 
-            {\prod_{v=1}^K \Gamma(\alpha_v)}
-        \prod_{j=1}^K p_j^{\alpha_j - 1}
-    \right\},
+    f_{\mu, p}(\mu, p \vert y)
+    &\propto
+    \Biggl\{ \prod_{i=1}^n f_{Y_i}(y \vert \mu, p) \Biggr\}
+    \pi_\mu(\mu) \pi_p(p)
+    \\ &\propto
+    \Biggl\{
+        \prod_{i=1}^n \sum_{j=1}^K 
+        \exp \biggl[
+            -\frac{1}{2} (y_i - \mu_j)^2
+        \biggr]
+        p_j
+    \Biggr\}
+    \prod_{j = 1}^K
+    \exp\biggl[
+        -\frac{1}{2\tau_0^2} (\mu_j - \mu_0)^2
+    \biggr]
+    p_j^{\alpha_j - 1}.
 \end{align*}
-where $\bm{1}$ denotes the $K \times 1$ vector of ones.
+Computing the evidence for this distribution directly is intractable.
 
-\noindent TODO
+Since we may want to sample from the posterior distribution,
+the conditional posteriors are also of interest.
+The probability mass of $I_i \vert \mu, p, Y$ is
+\begin{align*}
+    \Pr(I_i = j \vert \mu, p, Y)
+    &\propto
+    f_{Y_i}(y_i \vert \mu, p, I_i = j) \Pr(I_i = j \vert p)
+    \\ &\propto
+    \exp \biggl[ -\frac{1}{2} (y_i - \mu_j)^2 \biggr] p_j.
+\end{align*}
+These probabilities can be normalized easily upon computation.
+Next, define
+\[
+    n_j = \sum_{i \,:\, I_i = j} 1
+    \qquad\text{and}\qquad
+    \bar{y}_j = \frac{1}{n_j} \sum_{i \,:\, I_i = j} y_i.
+\]
+Then the density of $(\mu_j \vert I, Y)$ is
+\begin{align*}
+    f_{\mu_j}(\mu_j \vert I, Y)
+    &\propto
+    \biggl\{ 
+        \prod_{i \,:\, I_i = j} f_{Y_i}(y_i \vert \mu_j, I_i)
+    \biggr\}
+    \pi_{\mu_j}(\mu_j)
+    \\ &\propto
+    \exp\biggl[ 
+        -\frac{1}{2} \sum_{i \,:\, I_i = j} (y_i - \mu_j)^2 
+    \biggr]
+    \exp\biggl[
+        -\frac{1}{2\tau_0^2} (\mu_j - \mu_0)^2
+    \biggr]
+    \\ &\propto
+    \exp\biggl[ 
+        -\frac{1}{2} \sum_{i \,:\, I_i = j} y_i^2 - 2y_i\mu_j + \mu_j^2 
+    \biggr]
+    \exp\biggl[
+        -\frac{1}{2\tau_0^2} (\mu_j - \mu_0)^2
+    \biggr]
+    \\ &\propto
+    \exp\biggl[ 
+        -\frac{1}{2}(-2n_j \bar{y}_j\mu_j + n_j \mu_j^2)
+        -\frac{1}{2\tau_0^2} (\mu_j^2 - 2 \mu_0\mu_j)
+    \biggr]
+    \\ &\propto
+    \exp\biggl[
+        -\frac{1}{2}
+        \Bigl\{
+        (n_j + 1 / \tau_0^2) \mu_j^2 
+        - 2(n_j\bar{y}_j + \mu_0 / \tau_0^2)\mu_j
+        \Bigr\}
+    \biggr]
+    \\ &\propto
+    \exp\biggl[
+        -\frac{1}{2} (n_j + 1 / \tau_0^2)
+        \Bigl\{
+        \mu_j^2 
+        -2\,\frac{n_j\bar{y}_j + \mu_0 / \tau_0^2}{n_j + 1 / \tau_0^2} \,\mu_j
+        \Bigr\}
+    \biggr],
+\end{align*}
+from which we can infer that
+\[
+    (\mu_j \vert I, Y)
+    \sim
+    \textrm{N} \biggl(
+        \frac{n_j\bar{y}_j + \mu_0 / \tau_0^2}{n_j + 1 / \tau_0^2}, \
+        \frac{1}{n_j + 1 / \tau_0^2}
+    \biggr),
+    \qquad
+    j = 1, \ldots, K.
+\]
+Finally, the probability density of $(p \vert I, Y)$ is
+\begin{align*}
+    f_p(p \vert I, Y)
+    &\propto
+    f_{I}(I \vert p) \pi_p(p)
+    \\ &\propto
+    \biggl\{ \prod_{j=1}^K p_j^{n_j} \biggr\}
+    \prod_{j=1}^K p_j^{\alpha_j - 1}
+    \\ &\propto
+    \prod_{j=1}^K p_j^{\alpha_j + n_j - 1}.
+\end{align*}
+Thus $(p \vert I, Y) \sim \textrm{Dirichlet}(\alpha + \vec{n})$,
+for $\vec{n} = (n_1, \ldots, n_K)$.
 
-\subsection{Evaluating the Evidence: Analytically}
-
-TODO
 
 \subsection{Evaluating the Evidence: Nested Sampling}
-
-TODO
+A sample of $n = 1000$ observations was generated from the model, 
+with parameters
+\begin{align*}
+    K &= 3, \\
+    p &= (0.3439, 0.0537, 0.6024), \\
+    \mu &= (-1.5, 0, 1.5).
+\end{align*}
 
 \subsection{Evaluating the Evidence: Other Methods}
+Several alternatives are available for evaluating the evidence.
+One of these is the harmonic mean estimator
+\[
+    \hat{Z}_1
+    =
+    \biggl[
+        \frac{1}{m} \sum_{i=1}^m
+        f_{Y}\bigl( y \vert \mu^{(i)}, p^{(i)} \bigr)^{-1}
+    \biggr]^{-1}
+\]
+first proposed by Newton and Raftery. 
+Another is
+\[
+    \hat{Z}_2
+    =
+    \frac{
+        \delta m + (1 - \delta) \sum_{i=1}^m \frac{ 
+            f_{Y}(y \vert \mu^{(i)}, p^{(i)}) 
+        }{ 
+            \delta \hat{Z}_2 + (1 - \delta) f_{Y}(y \vert \mu^{(i)}, p^{(i)}) 
+        }
+    }{
+        \delta m \hat{Z}_2 
+        + (1 - \delta) \sum_{i=1}^m \{\delta\hat{Z}_2 
+        + (1 - \delta) f_{Y}(y \vert \mu^{(i)}, p^{(i)}) \}^{-1}
+    },
+\]
+which must be evaluated using an iterative method.
 
-TODO
-
-
+These estimators require sampling from the posterior distribution 
+$(\mu, p \vert Y)$, which we implement as a 2-stage Gibbs sampler:
+\begin{enumerate}
+\item Sample from $(I_i \vert \mu, p, Y)$, for $i = 1, \ldots, n$;
+\item Sample from $(\mu \vert I, Y)$ and $(p \vert I, Y)$.
+\end{enumerate}
+The necessary distributions were derived in Section~\ref{sec:posteriors}.
 
 \end{document}
