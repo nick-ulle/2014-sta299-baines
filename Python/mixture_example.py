@@ -5,7 +5,7 @@ import collections
 import numpy as np
 import nested_sampling as ns
 
-Model = collections.namedtuple('Model', 'mu0 tau0 alpha0')
+Model = collections.namedtuple('Model', 'mu0 tau0 alpha')
 InitialValues = collections.namedtuple('Model', 'mu p')
 
 def gibbs_sampler(y, init, model, max_iter):
@@ -22,7 +22,7 @@ def gibbs_sampler(y, init, model, max_iter):
     
     # Initialize all of the variables.
     n = y.size
-    k = init.p.size
+    k = model.alpha.size
 
     mu = np.empty((max_iter, k))
     mu[0, :] = init.mu
@@ -46,19 +46,15 @@ def gibbs_sampler(y, init, model, max_iter):
         for j in range(0, k):
             # Calculate mean of the observations in the class.
             if nn[j] == 0:
-                mean_j = 0
+                mean_j = 0.0
                 print('Class {} empty on iteration {}!'.format(j, iter))
             else:
                 class_j = y[ I[:, j] == 1 ]
                 mean_j = np.mean(class_j)
 
             # Calculate posterior mean and variance, then sample.
-            variance = 1 / (1 / model.tau0 + nn[j])
+            variance = model.tau0 / (1.0 + model.tau0 * nn[j])
             mean = (model.mu0 / model.tau0 + nn[j] * mean_j) * variance
-
-            if variance < 0:
-                print('Erroneous variance {}'.format(variance))
-                print('nn is {}'.format(nn))
 
             mu[iter, j] = np.random.normal(mean, np.sqrt(variance))
 
@@ -66,7 +62,7 @@ def gibbs_sampler(y, init, model, max_iter):
             print('Completed iteration {}.'.format(iter))
 
         # Finally, sample from the conditional posterior of p.
-        p[iter, :] = np.random.dirichlet(model.alpha0 + nn)
+        p[iter, :] = np.random.dirichlet(model.alpha + nn)
 
     return mu, p
 
@@ -75,15 +71,15 @@ def main():
     np.random.seed(100)
 
     model = Model(mu0 = 0.0, 
-                  tau0 = 2.0,
-                  alpha0 = np.array([1.0, 1.0, 2.0]))
-    init = InitialValues(mu = np.array([0.0, 0.0, 0.0]),
+                  tau0 = 1.0,
+                  alpha = np.array([1.0, 1.0, 1.0]))
+    init = InitialValues(mu = np.array([-1.0, 0.0, 1.0]),
                          p = np.array([1.0, 1.0, 1.0]) / 3.0)
 
     # Load the data.
     y = np.loadtxt('../sim_data_k_3.txt')
 
-    mu, p = gibbs_sampler(y, init, model, 10000)
+    mu, p = gibbs_sampler(y, init, model, 15000)
 
     np.savetxt('../out/mu.txt', mu)
     np.savetxt('../out/p.txt', p)
