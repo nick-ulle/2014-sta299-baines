@@ -67,7 +67,6 @@ def toy_example():
     '''Run the toy example.
     '''
     # Initialization:
-    np.random.seed(1220)
 
     sigma2 = 1.0
     mu_0 = 0.0
@@ -83,6 +82,15 @@ def toy_example():
             out += -0.5 * (np.log(2 * np.pi * sigma2) + (y_ - mu)**2 / sigma2)
         return out
 
+    np.random.seed(1220)
+    evidence = nested_sample(toy_log_like, toy_prior_sample, 200, 1500)
+    print(4 * ' ' + "Nested sampling estimate of log(Z) = {}".format(evidence))
+
+    np.random.seed(4105)
+    evidence = nested_sample(toy_log_like, toy_prior_sample, 200, 1500)
+    print(4 * ' ' + "Nested sampling estimate of log(Z) = {}".format(evidence))
+
+    np.random.seed(3)
     evidence = nested_sample(toy_log_like, toy_prior_sample, 200, 1500)
     print(4 * ' ' + "Nested sampling estimate of log(Z) = {}".format(evidence))
 

@@ -3,6 +3,7 @@
 \usepackage{psfrag, dcolumn, bm, accents, setspace, textcomp}
 \usepackage{url, hyperref, color, wasysym}
 \usepackage{dsfont}
+\usepackage{booktabs}
 
 \pagestyle{empty}
 
@@ -108,6 +109,8 @@
 \def\OpenCL{\texttt{OpenCL}\,}
 \def\GPUArray{\texttt{GPUArray}\,}
 
+\newcommand{\df}[1]{ \mathop{\mathrm{d}#1} }
+
 \begin{document}
 
 \title{Nested Sampling and the Evaluation of the \lq{}Evidence\rq{} for Bayesian Model Selection}
@@ -119,12 +122,66 @@ Paul D. Baines, Nicholas Ulle\\
 \maketitle
 
 \section{Introduction}\label{overview}
+A popular Bayesian model selection strategy is comparison of the 
+``evidence'' for each model.
+That is, the average likelihood over the prior probability space.
+This is quite intuitive---models with greater evidence are a better fit for
+the data.
+Here we will focus solely on methods for evaluating the evidence.
 
-\begin{itemize}
- \item Explanation of Nested Sampling
- \item Intuitive explanation of the algorithm
- \item Basics of computing the evidence and Bayesian model selection
-\end{itemize}
+Formally, for likelihood~$L$ and prior~$\pi$, the evidence is defined as
+\[
+    Z(y) = \int L(y; \theta) \pi(\theta) \df{\theta}.
+\]
+This expression is deceptively simple-looking;
+in practice, direct evaluation is often impractical or impossible,
+because the prior parameter $\theta$ is multi-dimensional.
+
+Nested sampling overcomes this difficulty by recasting the problem,
+to arrive at a one-dimensional integral which can the be evaluated using
+standard methods from numerical analysis.
+Consider the random variable $L(y; \theta) \geq 0$,
+which has survival function
+\[
+    S(\lambda) = \Pr_\pi \bigl[ L(y; \theta) > \lambda \bigr].
+\]
+A well-known result is that the integral of the survival function of a
+non-negative random variable is its expectation. In this case,
+\[
+    Z(y)
+    =
+    \E_\pi \bigl[ L(y; \theta) \bigr]
+    =
+    \int_0^\infty S(\lambda) \df{\lambda}.
+\]
+Since $S$ is monotonic, this area is the same as
+% TODO Possibly insert figure showing this.
+\[
+    Z(y)
+    =
+    \int_0^1 S^{-1}(x) \df{x},
+\]
+where $S^{-1}$ is the upper quantile function of $L(y; \theta)$.
+Explicit evaluation of $S^{-1}$ may be quite challenging,
+but we can avoid this entirely.
+% TODO Clarify this explanation a bit.
+Instead, we sample $n$ values $\theta_1, \ldots, \theta_n$
+from the prior~$\pi$, and define $L_i = L(y; \theta_i)$,
+for $i = 1, \ldots, n$.
+The smallest among these, $L_{(1)}$,
+is an estimate of the $(1 - 1 / n)$ upper quantile.
+If we remove $L_{(1)}$ from the sample and replace it with a new point
+drawn in the same way, but constrained to be strictly greater,
+then the new $L_{(1)}$ is an estimate of the $(1 - 1/n)^2$ upper quantile.
+By proceeding in this fashion, we can estimate $S^{-1}$ over its entire
+domain.
+It's then straightforward to approximate the integral numerically.
+
+Here we have implemented the nested sampler and applied it to a
+toy example where the evidence can also be computed analytically.
+We also propose a mixture model, where the evidence cannot be computed
+analytically, for further study, including the use of alternative
+estimators of the evidence.
 
 \section{Toy Example}
 Let:
@@ -146,10 +203,38 @@ Letting $C=(2\pi)^{-(n+1)/2}(\tau_{0}^{2})^{-1/2}(\sigma^{2})^{-n/2}$, the evide
    &= C\times(2\pi)^{1/2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1/2}\exp\left\{ - \frac{1}{2}\left(\frac{\mu_{0}^{2}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}^{2}}{\sigma^{2}}\right)
   + \frac{1}{2}\left(\frac{n}{\sigma^{2}}+\frac{1}{\tau_{0}^{2}}\right)^{-1}\left[\frac{\mu_{0}}{\tau_{0}^{2}} + \frac{\sum_{i=1}^{n}y_{i}}{\sigma^{2}}\right]^{2}\right\} .
 \end{align*}
-This will allow us to verify the results obtained using nested sampling. In the simple case where $\mu_{0}=0$, $\tau_{0}^{2}=1$, $n=1$, $\sigma^{2}=1$ we obtain:
+This will allow us to verify the results obtained using nested sampling. 
+
+\subsection{Evaluating the Evidence: Nested Sampling}
+We consider the simple case where $\mu_{0}=0$, $\tau_{0}^{2}=1$, $n=1$,
+and $\sigma^{2}=1$.
+In this case, the analytic solution for the evidence yields
 \begin{align*}
-Z = (2\pi)^{-1/2}\left(2\right)^{-1/2}\exp\left\{ - \frac{1}{2}y^{2} + \frac{1}{2}\left(2\right)^{-1}y^{2}\right\}  = \frac{1}{2\sqrt{\pi}}\exp\left\{-\frac{y^{2}}{4}\right\} .
+Z = (2\pi)^{-1/2}\left(2\right)^{-1/2}\exp\left\{ - \frac{1}{2}y^{2} + \frac{1}{2}\left(2\right)^{-1}y^{2}\right\}  = \frac{1}{2\sqrt{\pi}}\exp\left\{-\frac{y^{2}}{4}\right\},
 \end{align*}
+or equivalently, $\log Z \approx -7.5155$.
+Direct application of Gaussian quadrature to the integral confirms that
+this value is correct.
+
+The nested sampler was applied three times, 
+using $1500$ iterations and a sample size of $n = 200$.
+The resulting log-estimates are shown in Table~\ref{tab:toy.est}.
+All three fall reasonably close to the true value, particularly the third.
+
+    \begin{table}[ht]
+    \centering
+    \begin{tabular}{cr}
+        \toprule
+        Trial & Estimate \\
+        \midrule
+        1 & -7.2957 \\
+        2 & -7.9335 \\
+        3 & -7.5609 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Log-estimates from the nested sampler.}
+    \label{tab:toy.est}
+    \end{table}
 
 \section{Mixture Example}
 Here we take a look at the classic mixture of normals:
@@ -303,6 +388,7 @@ with parameters
     p &= (0.3439, 0.0537, 0.6024), \\
     \mu &= (-1.5, 0, 1.5).
 \end{align*}
+This will be the subject of further study.
 
 \subsection{Evaluating the Evidence: Other Methods}
 Several alternatives are available for evaluating the evidence.
@@ -341,5 +427,18 @@ $(\mu, p \vert Y)$, which we implement as a 2-stage Gibbs sampler:
 \item Sample from $(\mu \vert I, Y)$ and $(p \vert I, Y)$.
 \end{enumerate}
 The necessary distributions were derived in Section~\ref{sec:posteriors}.
+The implementation was used to draw a sample of $15000$ observations.
+Trace plots are shown in Figure~\ref{fig:mix.trace}.
+They indicate that the chain managed to find all three modes of the posterior
+likelihood.
+
+    \begin{figure}[h]
+    \centering
+    \includegraphics[width = 0.45\textwidth]{out/mu.png}
+    \includegraphics[width = 0.45\textwidth]{out/p.png}
+    \caption{Trace plots for the sampled values of $\mu$ and $p$.
+    Each component is shown in a different color.}
+    \label{fig:mix.trace}
+    \end{figure}
 
 \end{document}
