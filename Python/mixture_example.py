@@ -83,13 +83,14 @@ def gibbs_sampler(y, init, model, max_iter):
     return mu, p
 
 def log_like(y, mu, p):
+    n = y.size
     # Repeat y to speed up computation.
     y = np.repeat(y[:, None], mu.size, axis = 1)
 
     # TODO Use numerically stable log-addition.
     ll = np.log( np.sum(np.exp(-0.5 * (y - mu)**2) * p, axis = 1) )
 
-    return np.sum(ll)
+    return -n * np.log(2 * np.pi) / 2 + np.sum(ll)
 
 def est_z1(y, mu, p):
     ''' Implements Z_1 evidence estimator described in documentation.
@@ -108,13 +109,16 @@ def est_z1(y, mu, p):
     return -z
 
 def main():
+    # TODO Write a better interface.
     parser = ap.ArgumentParser(description = 'Run the nested sampling mixture'
                                + ' model example.')
-    parser.add_argument('-s', '--sample', action = 'store_true',
+    parser.add_argument('-p', '--posterior', action = 'store_true',
                         help = 'Sample from the mixture model posterior.')
+    parser.add_argument('-n', '--nested', action = 'store_true',
+                        help = 'Run nested sampling.')
     args = parser.parse_args()
 
-    if args.sample:
+    if args.posterior:
         # Run the sampler.
         np.random.seed(100)
 
