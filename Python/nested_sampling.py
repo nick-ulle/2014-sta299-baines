@@ -47,7 +47,7 @@ def nested_sample(log_likelihood, prior_sample, npts, niter):
 
         # Increment evidence by weighted likelihood point.
         evidence_incr = wt + smallest # width * likelihood
-        evidence = log_sum(evidence_incr, evidence)
+        evidence = np.logaddexp(evidence_incr, evidence)
 
         # Sample a new likelihood point to replace the old one.
         lpts[id] = rejection_sample(smallest, prior_sample, log_likelihood)
@@ -59,17 +59,9 @@ def nested_sample(log_likelihood, prior_sample, npts, niter):
     # Add final correction to evidence.
     for i in range(0, npts):
         evidence_incr = -np.log(npts) + lpts[i] - (niter / npts)
-        evidence = log_sum(evidence_incr, evidence)
+        evidence = np.logaddexp(evidence_incr, evidence)
 
     return evidence
-
-def log_sum(x, y):
-    '''Compute a logarithmic sum in a numerically stable way.
-    '''
-    if x > y:
-        return x + np.log(1 + np.exp(y - x))
-    else:
-        return y + np.log(1 + np.exp(x - y))
 
 def toy_example():
     '''Run the toy example.
